@@ -1,0 +1,41 @@
+{
+  "name": "react-cool-utils",
+  "version": "1.0.0",
+  "sideEffects": false,
+  "author": {
+    "email": "alex.skakun@me.com",
+    "name": "Aleksey Skakun",
+    "url": "https://github.com/alex-skakun"
+  },
+  "repository": {
+    "url": "https://github.com/alex-skakun/react-cool-utils.git"
+  },
+  "license": "MIT",
+  "keywords": [],
+  "scripts": {
+    "test": "bun test",
+    "test:coverage": "bun test --coverage",
+    "build": "bun run build:cjs && bun run build:esm",
+    "prebuild": "bunx rimraf ./dist",
+    "postbuild": "bun run tools/completePackage.ts",
+    "build:cjs": "echo 'Building CommonJS version' && bunx tsc -p ./tsconfig.cjs.json --pretty",
+    "build:esm": "echo 'Building ESModule version' && bunx tsc -p ./tsconfig.esm.json --pretty",
+    "prerelease": "bun run build",
+    "release": "npm publish ./dist --tag latest --access public"
+  },
+  "dependencies": {
+    "uuid": "9.0.1"
+  },
+  "devDependencies": {
+    "@types/react": "18.2.58",
+    "@types/react-dom": "18.2.19",
+    "@types/uuid": "9.0.8",
+    "bun-types": "1.0.29",
+    "react-dom": "18.2.0",
+    "rimraf": "5.0.5",
+    "typescript": "5.3.3"
+  },
+  "peerDependencies": {
+    "react": "16.x.x - 18.x.x"
+  }
+}
