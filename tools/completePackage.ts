@@ -1,5 +1,30 @@
-import { copyFile, readdir } from 'node:fs/promises';
-import { readFileAsText, src, writeFileAsText, parsePackageJson } from './shared';
+import { glob } from 'node:fs/promises';
+import { resolve } from 'node:path';
+
+import {
+  asyncScheduler,
+  catchError,
+  defaultIfEmpty,
+  defer,
+  EMPTY,
+  filter,
+  forkJoin,
+  map,
+  mergeMap,
+  Observable,
+  of,
+  scheduled,
+  switchMap,
+  toArray,
+} from 'rxjs';
+
+import { alterPackage } from './utils';
+
+const propertiesToRemove = [
+  'scripts',
+  'nx',
+  'jestSonar',
+];
 
 const packageExtension = {
   main: './cjs/index.js',
@@ -16,40 +41,52 @@ const packageExtension = {
   },
 };
 
-Promise.all([
-  readFileAsText('.gitignore'),
-  readFileAsText('.npmignore'),
-])
-  .then((fileLists) => fileLists
-    .flatMap((fileList) => fileList.split(/\s*\n+\s*/))
-    .filter((item) => !/^#/.test(item)),
-  )
-  .then((ignoredFilesList) => ignoredFilesList.map(source => {
-    return new RegExp(`^${source.replace(/\*/g, '.+?')}$`);
-  }))
-  .then((filter) => readdir(src('.')).then((workingDirFiles) => {
-    return workingDirFiles.filter((file) => {
-      return !filter.some((ignore) => ignore.test(file));
-    });
-  }))
-  .then((filesForCopy) => Promise.all(filesForCopy.map(file => {
-    return copyFile(src(file), src(`./dist/${file}`));
-  })))
-  .then(() => parsePackageJson(`./dist/package.json`))
-  .then((packageJson) => {
-    delete packageJson.scripts;
+export function completePackage(
+  workDir: string,
+  packageDir: string,
+  packageName: string,
+) {
+  const rootDir = resolve(workDir, '.');
+  const gitIgnorePath = resolve(rootDir, '.gitignore');
+  const npmIgnorePath = resolve(workDir, '.npmignore');
 
-    return {
-      ...packageJson,
-      ...packageExtension,
-    };
-  })
-  .then((updatedPackage) => JSON.stringify(updatedPackage, null, 2))
-  .then((jsonFile) => writeFileAsText(`./dist/package.json`, jsonFile))
-  .then(
-    () => console.log('SUCCESS'),
-    (err) => {
-      console.error('FAILED');
-      console.error(err);
-    },
+  return forkJoin([
+    safelyReadFileAsText(gitIgnorePath),
+    safelyReadFileAsText(npmIgnorePath),
+  ])
+    .pipe(
+      map((fileLists) => (
+        fileLists
+          .flatMap((fileList) => fileList.split(/\s*\n+\s*/))
+          .filter((fileEntry) => fileEntry && !/^#/.test(fileEntry))
+      )),
+      switchMap((filesToIgnore) => defer(() => glob('**/*', { cwd: workDir, exclude: filesToIgnore })).pipe(
+        toArray(),
+      )),
+      switchMap((filesToCopy) => (
+        scheduled(filesToCopy, asyncScheduler).pipe(
+          mergeMap((file) => (
+            Bun.write(resolve(packageDir, file), Bun.file(resolve(workDir, file)))
+          ), 1),
+          toArray(),
+        )
+      )),
+      switchMap(() => alterPackage(resolve(packageDir, 'package.json'), {
+        ...Object.fromEntries(propertiesToRemove.map((property) => [property, undefined])),
+        ...packageExtension,
+        name: packageName,
+      })),
+    );
+}
+
+function safelyReadFileAsText(path: string): Observable<string> {
+  const file = Bun.file(path);
+
+  return of(Bun.file(path)).pipe(
+    switchMap((file) => file.exists()),
+    filter(Boolean),
+    switchMap(() => file.text()),
+    catchError(() => EMPTY),
+    defaultIfEmpty(''),
   );
+}

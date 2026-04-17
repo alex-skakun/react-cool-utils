@@ -7,14 +7,6 @@ describe('classNames()', () => {
       expect(classNames('test', 'class', 'name')).toBe('test class name');
     });
 
-    test('recognize space separated string as different class names and use each class only once', () => {
-      expect(classNames('test', 'class name', 'class')).toBe('test class name');
-    });
-
-    test('trim strings and split by groups of spaces', () => {
-      expect(classNames(' test ', 'class \t name\n', 'css')).toBe('test class name css');
-    });
-
     test('skip null or undefined', () => {
       expect(classNames('test', null, undefined, 'css')).toBe('test css');
     });
@@ -25,12 +17,8 @@ describe('classNames()', () => {
       expect(classNames(['test'], ['class', 'name'])).toBe('test class name');
     });
 
-    test('recognize space separated string as different class names and use each class only once', () => {
-      expect(classNames(['test', 'class name'], ['class'])).toBe('test class name');
-    });
-
-    test('trim strings and split by groups of spaces', () => {
-      expect(classNames([' test ', 'class \t name\n', 'css'])).toBe('test class name css');
+    test('combine strings with multiple classes as is', () => {
+      expect(classNames(['test', 'class name'], ['class'])).toBe('test class name class');
     });
 
     test('skip null or undefined', () => {
@@ -43,20 +31,6 @@ describe('classNames()', () => {
       expect(classNames({ test: true }, { class: 1 }, { name: 'name' })).toBe('test class name');
     });
 
-    test('recognize space separated string as different class names and use each class only once', () => {
-      expect(classNames({
-        test: true,
-        'class name': true,
-        class: true,
-      })).toBe('test class name');
-    });
-
-    test('trim strings and split by groups of spaces', () => {
-      expect(classNames({
-        ' test class \n \t name ': true
-      })).toBe('test class name');
-    });
-
     test('ignore class names with falsy values or empty names', () => {
       expect(classNames({
         test: true,
@@ -65,7 +39,6 @@ describe('classNames()', () => {
         name: 0,
         active: '',
         valid: false,
-        ' ': true,
       })).toBe('test class');
     });
   });

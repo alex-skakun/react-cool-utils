@@ -1,74 +1,45 @@
-type PossibleClassName = string | undefined | null;
+import { Nullish } from 'value-guards';
 
-interface ClassNamesAccumulator {
-  uniqueClassNames: Set<string>;
-  results: string[];
-}
+export type PossibleClassName = Nullish<string>;
+export type ClassNamesArgument = PossibleClassName | PossibleClassName[] | Record<string, unknown> | ClassNamesArgument[];
 
-export function classNames(...args: (Record<string, unknown> | PossibleClassName[] | PossibleClassName)[]): string {
-  const { results } = args.reduce<ClassNamesAccumulator>((acc, argument) => {
-    if (!argument) {
-      return acc;
-    }
-
-    if (typeof argument === 'string') {
-      return handleStringArgument(argument, acc);
-    }
-
-    if (Array.isArray(argument)) {
-      return argument.length ? handleArrayArgument(argument, acc) : acc;
-    }
-
-    if (typeof argument === 'object') {
-      return handleObjectArgument(argument, acc);
-    }
-
-    return acc;
-  }, {
-    uniqueClassNames: new Set(),
-    results: [],
-  });
-
-  return results.join(' ');
-}
-
-function handleStringArgument(arg: string, acc: ClassNamesAccumulator): ClassNamesAccumulator {
-  const cssClasses = arg.trim().split(/\s+/);
-
-  forLoop(cssClasses, (cssClass) => {
-    if (!acc.uniqueClassNames.has(cssClass)) {
-      acc.uniqueClassNames.add(cssClass);
-      acc.results.push(cssClass);
-    }
-  });
-
-  return acc;
-}
-
-function handleArrayArgument(arg: PossibleClassName[], acc: ClassNamesAccumulator): ClassNamesAccumulator {
-  forLoop(arg, (possibleClassName) => {
-    if (possibleClassName) {
-      handleStringArgument(possibleClassName, acc);
-    }
-  });
-
-  return acc;
-}
-
-function handleObjectArgument(arg: Record<string, unknown>, acc: ClassNamesAccumulator): ClassNamesAccumulator {
-  forLoop(Object.entries(arg), ([cssClass, shouldBeAdded]) => {
-    const cssClassValue = cssClass.trim();
-
-    if (cssClassValue && shouldBeAdded) {
-      handleStringArgument(cssClassValue, acc);
-    }
-  });
-
-  return acc;
-}
-
-function forLoop<T>(arr: T[], cb: (item: T) => void): void {
-  for (let i = 0, l = arr.length; i < l; i++) {
-    cb(arr[i]);
+function isSafari(): boolean {
+  if ('window' in globalThis && window?.navigator?.userAgent) {
+    return /^((?!chrome|android).)*safari/i.test(window.navigator.userAgent);
   }
+
+  return false;
+}
+
+function appendChrome(acc: string, className: string): string {
+  return acc + (acc ? ' ' : '') + className;
+}
+
+function appendSafari(acc: string, className: string): string {
+  return `${acc}${acc ? ' ' : ''}${className}`;
+}
+
+const append = isSafari() ? appendSafari : appendChrome;
+
+export function classNames(...args: ClassNamesArgument[]): string;
+export function classNames(): string {
+  var acc = '';
+
+  for (var i = 0, l = arguments.length; i < l; i++) {
+    var arg = arguments[i];
+
+    if (typeof arg === 'string') {
+      acc = append(acc, arg);
+    } else if (Array.isArray(arg)) {
+      acc = append(acc, classNames.apply(null, arg));
+    } else if (arg instanceof Object) {
+      for (var key in arg) {
+        if (arg.hasOwnProperty(key) && arg[key]) {
+          acc = append(acc, key);
+        }
+      }
+    }
+  }
+
+  return acc;
 }

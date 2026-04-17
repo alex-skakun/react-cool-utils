@@ -1,17 +1,19 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "jsx": "react-jsx",
-    "lib": ["ESNext", "DOM", "DOM.Iterable"],
     "types": [
       "bun",
       "node"
     ]
   },
-  "include": [
+  "exclude": [
+    "node_modules",
     "setupTests.ts",
+    "tools/**/*.ts",
     "src/**/*.spec.ts",
-    "src/**/*.spec.tsx",
-    "src/**/*.d.ts"
+    "src/**/*.spec.tsx"
+  ],
+  "include": [
+    "tools/**/*.ts"
   ]
 }

@@ -1,12 +1,13 @@
 .git
 .gitignore
 .npmignore
+.eslintignore
+.eslintrc
 tsconfig.json
 tsconfig.*.json
 package-lock.json
-bun.lockb
-jest.config.js
-webpack.config.js
+bun.lock
+bunfig.toml
+setupTests.ts
 src
 tools
-demo
