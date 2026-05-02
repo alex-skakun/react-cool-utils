@@ -1,4 +1,5 @@
-# react-cool-utils
+react-cool-utils
+================
 
 Helpful utility functions that you usually need in any react project.
 
@@ -7,6 +8,19 @@ Helpful utility functions that you usually need in any react project.
 > - `renderMany()` now returns an array instead of Fragment
 > - `classNames()` do not deduplicate css-classes anymore
 > - package `uuid` moved to peerDependencies and should be installed separately
+
+### TOC
+
+  * [classNames()](#classnames)
+  * [dataAttrs()](#dataattrs)
+  * [customStyle()](#customstyle)
+  * [generateKey()](#generatekey)
+  * [withReactKey()](#withreactkey)
+  * [getReactKey()](#getreactkey)
+  * [renderMany()](#rendermany)
+  * [createContextCouple()](#createcontextcouple)
+  * [objectEntries()](#objectentries)
+  * [\<Switch\>/\<Case\>](#switchcase)
 
 
 ### `classNames()`
@@ -309,3 +323,7 @@ function StatusIcon({ status }: MyComponentProps) {
   );
 }
 ```
+
+## Licence
+
+MIT
